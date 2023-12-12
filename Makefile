@@ -5,7 +5,7 @@ run: build
 	@./bin/app
 
 run-node: 
-	nodemon --exec go run cmd/*.go 
+	nodemon --exec go run cmd/main.go 
 
 test: 
 	@go test -v ./...
