@@ -1,0 +1,6 @@
+profile.*
+coverage.*
+
+# profile.out
+
+# coverage.html
