@@ -1,6 +1,6 @@
 profile.*
 coverage.*
-
+bin/*
 # profile.out
 
 # coverage.html

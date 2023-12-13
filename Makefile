@@ -1,7 +1,8 @@
 build:
-	@go build -o /bin/app
+	@go build -o ./bin/app ./cmd
 
 run: build
+	@echo "Running the application..."
 	@./bin/app
 
 run-node: 

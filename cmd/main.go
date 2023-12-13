@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"kirana/config"
+	"io/ioutil"
 	"log"
+	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -32,8 +33,29 @@ func main() {
 	log.Fatal(app.Listen(":8080"))
 }
 
+type ResponseData struct {
+	Message string      `json:"message"`
+	Version string      `json:"version"`
+	Data    interface{} `json:"data"`
+}
+
+type Product struct {
+	ID                 int      `json:"id"`
+	Title              string   `json:"title"`
+	Description        string   `json:"description"`
+	Price              float64  `json:"price"`
+	DiscountPercentage float64  `json:"discountPercentage"`
+	Rating             float64  `json:"rating"`
+	Stock              int      `json:"stock"`
+	Brand              string   `json:"brand"`
+	Category           string   `json:"category"`
+	Thumbnail          string   `json:"thumbnail"`
+	Images             []string `json:"images"`
+}
+
 // Setup Setup a fiber app with all of its routes
 func Setup() *fiber.App {
+
 	app := fiber.New()
 	app.Use(cors.New())
 
@@ -43,16 +65,31 @@ func Setup() *fiber.App {
 	})
 
 	app.Use(logger.New(logger.Config{
-		Format: "[${time}] ${ip}  ${status} - ${latency} ${method} ${path}\n",
+		Format: "${cyan}[${time}] ${ip}  ${status} - ${red}${latency} ${method} ${path}\n",
 	}))
 
-	app.Get("/", func(ctx *fiber.Ctx) error {
-		return ctx.Status(fiber.StatusOK).JSON(&fiber.Map{
-			"message": "Welcome to kirana application server...",
-			"version": config.Config("API_VERSION"),
-		})
-	})
+	app.Get("/", func(c *fiber.Ctx) error {
+		resp, err := http.Get("https://dummyjson.com/products/1")
+		if err != nil {
+			fmt.Println("No response from request")
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body) // response body is []byte
+		fmt.Println(string(body))
 
+		var product Product
+		err = json.Unmarshal(body, &product)
+
+		// Create the JSON response
+		response := ResponseData{
+			Message: "Welcome to kirana application server...",
+			Version: "API_VERSION", // Replace with your actual API version
+			Data:    product,       // Assuming you want to include the response body as a string
+		}
+
+		// Send the JSON response
+		return c.Status(fiber.StatusOK).JSON(response)
+	})
 	app.Post("/", func(c *fiber.Ctx) error {
 		file, err := c.FormFile("file")
 		if err != nil {
