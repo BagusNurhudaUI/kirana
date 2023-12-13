@@ -4,20 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"kirana/database"
+	"kirana/handler"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
+	zlog "github.com/rs/zerolog/log"
 )
 
 func main() {
-	// db, cancel, err := databaseConnection()
-	// if err != nil {
-	// 	log.Fatal("Database Connection Error $s", err)
-	// }
-	// fmt.Println("Database connection success!")
+
+	err := database.Connect()
+	if err != nil {
+		zlog.Fatal().Msgf("Database connection error: %v", err)
+	}
 	fmt.Println("starting the kirana server...")
 	// bookCollection := db.Collection("books")
 	// bookRepo := book.NewRepo(bookCollection)
@@ -27,10 +30,9 @@ func main() {
 	app.Use(func(c *fiber.Ctx) error {
 		return c.SendStatus(404)
 	})
-	// api := app.Group("/api")
-	// routes.BookRouter(api, bookService)
-	// defer cancel()
-	log.Fatal(app.Listen(":8080"))
+
+	zlog.Fatal().Msgf("%v", app.Listen(":8080"))
+
 }
 
 type ResponseData struct {
@@ -60,9 +62,10 @@ func Setup() *fiber.App {
 	app.Use(cors.New())
 
 	app.Use(func(c *fiber.Ctx) error {
-		fmt.Println("🥇 First handler")
 		return c.Next()
 	})
+
+	app.Use(recover.New())
 
 	app.Use(logger.New(logger.Config{
 		Format: "${cyan}[${time}] ${ip}  ${status} - ${red}${latency} ${method} ${path}\n",
@@ -75,7 +78,6 @@ func Setup() *fiber.App {
 		}
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body) // response body is []byte
-		fmt.Println(string(body))
 
 		var product Product
 		err = json.Unmarshal(body, &product)
@@ -112,14 +114,19 @@ func Setup() *fiber.App {
 			return err
 		}
 
-		// Print or send the JSON response
-		fmt.Println(string(jsonData))
+		zlog.Info().Msg(string(jsonData))
 		// Save file to root directory:
 		return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 			"data": jsonData,
 		})
 		// return c.SaveFile(file, fmt.Sprintf("./%s", file.Filename))
 	})
+
+	v1 := app.Group("/api/v1")
+
+	// Bind handlers
+	v1.Get("/users", handler.UserList)
+	v1.Post("/users", handler.UserCreate)
 	// Return the configured app
 	return app
 }

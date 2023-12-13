@@ -11,8 +11,6 @@ run-node:
 test: 
 	@go test -v ./...
 
-test-profile:
+test-coverage:
 	@go test -v ./... -coverprofile=profile.out
-	
-test-html:
 	@go tool cover -html=profile.out -o coverage.html

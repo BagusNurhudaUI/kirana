@@ -8,6 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// func Init_Test() {
+// 	zlog.Logger = zlog.Output(zerolog.ConsoleWriter{Out: nil})
+// 	log.SetOutput(ioutil.Discard)
+
+// }
+
 func TestIndexRoute(t *testing.T) {
 	// Define a structure for specifying input and output
 	// data of a single test case. This structure is then used
