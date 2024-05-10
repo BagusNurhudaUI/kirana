@@ -1,0 +1,18 @@
+version: '3'
+services:
+  kirana-cont-comp:
+    build: .
+    container_name: kirana-cont-comp
+    restart: always
+    ports:
+      - '8080:8080'
+    expose: 
+      - '8080'
+    command : [ "go", "build", "-o", "./bin/app", "./cmd"]
+
+  grafana: 
+    container_name: grafana
+    image: "grafana/grafana"
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
